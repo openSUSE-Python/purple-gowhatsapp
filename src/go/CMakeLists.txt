@@ -3,15 +3,15 @@ set(CMAKE_Go_COMPILER "go" CACHE STRING "Path to the go compiler binary")
 # have a self-contained GOPATH
 set(GOPATH "${CMAKE_CURRENT_BINARY_DIR}/_go")
 
-# hack to depend on latest version using go mod tidy
-add_custom_command(
-  COMMENT "Updating go modules..."
-  OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/go.mod" "${CMAKE_CURRENT_SOURCE_DIR}/go.sum"
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in" "${CMAKE_CURRENT_SOURCE_DIR}/go.mod"
-  COMMAND ${CMAKE_COMMAND} -E env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} mod tidy
-)
+# MC # # hack to depend on latest version using go mod tidy
+# MC # add_custom_command(
+# MC #   COMMENT "Updating go modules..."
+# MC #   OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/go.mod" "${CMAKE_CURRENT_SOURCE_DIR}/go.sum"
+# MC #   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in"
+# MC #   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+# MC #   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in" "${CMAKE_CURRENT_SOURCE_DIR}/go.mod"
+# MC #   COMMAND ${CMAKE_COMMAND} -E env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} mod tidy
+# MC # )
 
 # custom target for downloading modules explicitly
 add_custom_target(download-modules
