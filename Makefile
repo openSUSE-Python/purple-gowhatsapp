@@ -1,8 +1,15 @@
 $(warning This Makefile exists for reference purposes. It is not maintained. Use CMake instead.)
 
-export GO_FLAGS
-export CGO_CFLAGS = -DPLUGIN_VERSION=$(shell cat VERSION) $(shell pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)
-export CGO_LDFLAGS = $(shell pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0)
+
+export GO_FLAGS ?=
+export CFLAGS ?=
+export PLUGIN_VERSION := $(shell cat VERSION 2>/dev/null)
+export CGO_CFLAGS := -DPLUGIN_VERSION=$(PLUGIN_VERSION) $(CFLAGS) $(shell pkg-config --cflags glib-2.0 purple opusfile gdk-pixbuf-2.0 2>/dev/null)
+export CGO_LDFLAGS := $(shell pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0 2>/dev/null)
+
+GO_FILES := bridge.go constants.go groups.go handle_message.go handler.go logger.go login.go mark_read.go message_cache.go opusreader.go presence.go profile.go send_file_checks.go send_file.go send_message.go
+C_FILES_GLUE := glue/blist.c glue/bridge.c glue/commands.c glue/display_message.c glue/groups.c glue/handle_attachment.c glue/init.c glue/login.c glue/options.c glue/pixbuf.c glue/presence.c glue/process_message.c glue/qrcode.c glue/receipt.c glue/send_file.c glue/send_message.c
+C_FILES_BASE := bridge.c constants.c opusreader.c
 
 all: libwhatsmeow.so
 
@@ -12,11 +19,11 @@ go.mod: go.mod.in
 go.sum: go.mod
 	go mod tidy
 
-libwhatsmeow.a libwhatsmeow.h: bridge.c bridge.go bridge.h constants.c constants.h go.mod go.sum groups.go handle_message.go handler.go logger.go login.go mark_read.go message_cache.go opusreader.c opusreader.h presence.go profile.go send_file_checks.go send_file.go send_message.go
+libwhatsmeow.a libwhatsmeow.h: go.mod go.sum $(GO_FILES) $(C_FILES_BASE) bridge.h constants.h opusreader.h # Reduced Go file list
 	go build -buildmode=c-archive -o libwhatsmeow.a $(GO_FLAGS)
 
-libwhatsmeow.so: libwhatsmeow.a libwhatsmeow.h constants.c constants.h glue/blist.c glue/bridge.c glue/commands.c glue/display_message.c glue/gowhatsapp.h glue/groups.c glue/handle_attachment.c glue/init.c glue/login.c glue/options.c glue/pixbuf.c glue/pixbuf.h glue/presence.c glue/process_message.c glue/purple_compat.h glue/qrcode.c glue/receipt.c glue/send_file.c glue/send_message.c
-	$(CC) -shared -fPIC -o libwhatsmeow.so constants.c glue/blist.c glue/bridge.c glue/commands.c glue/display_message.c glue/groups.c glue/handle_attachment.c glue/init.c glue/login.c glue/options.c glue/pixbuf.c glue/presence.c glue/process_message.c glue/qrcode.c glue/receipt.c glue/send_file.c glue/send_message.c -I. libwhatsmeow.a $(CGO_CFLAGS) $(CGO_LDFLAGS)
+libwhatsmeow.so: libwhatsmeow.a libwhatsmeow.h constants.c $(C_FILES_GLUE) glue/gowhatsapp.h glue/pixbuf.h glue/purple_compat.h
+	$(CC) -shared -fPIC -o libwhatsmeow.so $(C_FILES_GLUE) -I. libwhatsmeow.a $(CGO_CFLAGS) $(CGO_LDFLAGS)
 
 clean:
 	rm -f libwhatsmeow.a libwhatsmeow.h
